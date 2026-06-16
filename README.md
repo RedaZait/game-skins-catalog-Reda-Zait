@@ -1,22 +1,30 @@
 # Catalogue de skins de jeux vidéo
 
-Mini-application Express + Mongoose + HTML/JS permettant de gérer :
+Mini-application Express / Mongoose avec un front HTML, CSS et JavaScript permettant de gérer un catalogue de skins, des joueurs, leurs achats et leurs inventaires.
 
-- un catalogue de skins ;
-- des joueurs avec solde ;
-- un inventaire sous forme de sous-documents ;
-- une route métier d’achat ;
-- un dashboard d’analytics basé sur un pipeline d’agrégation MongoDB.
+## Fonctionnalités
 
-## Stack
+* Affichage du catalogue des skins.
+* Création de joueurs avec un solde initial.
+* Achat de skins par un joueur.
+* Déduction du prix sur le solde du joueur.
+* Ajout du skin acheté dans l’inventaire.
+* Classement des joueurs par fortune totale.
+* Connexion à MongoDB Atlas.
 
-- Node.js
-- Express
-- MongoDB Atlas
-- Mongoose
-- HTML / CSS / JavaScript avec `fetch`
+## Technologies utilisées
+
+* Node.js
+* Express
+* Mongoose
+* MongoDB Atlas
+* dotenv
+* cors
+* HTML / CSS / JavaScript
 
 ## Installation
+
+Installer les dépendances :
 
 ```bash
 npm install
@@ -24,25 +32,17 @@ npm install
 
 Créer un fichier `.env` à la racine du projet :
 
-```bash
-cp .env.example .env
-```
-
-Puis remplacer `MONGO_URI` par la chaîne de connexion MongoDB Atlas.
-
-Exemple :
-
 ```env
 MONGO_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 MONGO_DB_NAME=game_skins_catalog
 PORT=3000
 ```
 
-Important : le fichier `.env` ne doit pas être envoyé sur GitHub.
+Le fichier `.env` ne doit pas être envoyé sur GitHub.
 
-## Lancer le projet
+## Lancer l’application
 
-Insérer des skins de démonstration :
+Insérer les skins de démonstration :
 
 ```bash
 npm run seed
@@ -54,13 +54,21 @@ Lancer le serveur :
 npm run dev
 ```
 
-Puis ouvrir :
+Ouvrir ensuite :
 
 ```text
 http://localhost:3000
 ```
 
-## Routes API
+## Dépendances utilisées
+
+* `express` : création du serveur et des routes API.
+* `mongoose` : gestion des modèles, schémas et requêtes MongoDB.
+* `dotenv` : chargement des variables d’environnement.
+* `cors` : gestion des autorisations de requêtes.
+* `nodemon` : redémarrage automatique du serveur en développement.
+
+## Routes API principales
 
 ### Skins
 
@@ -72,16 +80,9 @@ Renvoie tous les skins du catalogue.
 
 ```http
 POST /api/skins
-Content-Type: application/json
-
-{
-  "nom": "Dragon Rouge",
-  "rarete": "Legendaire",
-  "prix": 950
-}
 ```
 
-Crée un skin.
+Crée un nouveau skin.
 
 ### Players
 
@@ -89,30 +90,19 @@ Crée un skin.
 GET /api/players
 ```
 
-Renvoie tous les joueurs avec leur inventaire peuplé.
+Renvoie tous les joueurs avec leur inventaire.
 
 ```http
 POST /api/players
-Content-Type: application/json
-
-{
-  "pseudo": "amine",
-  "solde": 1500
-}
 ```
 
 Crée un joueur.
 
 ```http
 POST /api/players/:id/buy
-Content-Type: application/json
-
-{
-  "skinId": "ID_DU_SKIN"
-}
 ```
 
-Permet à un joueur d’acheter un skin. La route vérifie le solde, déduit le prix du skin et ajoute un sous-document dans `inventory`.
+Permet à un joueur d’acheter un skin. La route vérifie le solde, déduit le prix du skin et ajoute le skin dans l’inventaire.
 
 ### Analytics
 
@@ -128,19 +118,30 @@ Renvoie le classement des joueurs les plus riches.
 
 Le modèle `Skin` contient :
 
-- `nom` : chaîne obligatoire, nettoyée avec `trim` ;
-- `rarete` : chaîne obligatoire, limitée par enum ;
-- `prix` : nombre obligatoire avec minimum `0`.
+* `nom` : nom du skin ;
+* `rarete` : rareté du skin ;
+* `prix` : prix du skin.
 
-Des index sont ajoutés sur `rarete` et `prix` pour faciliter l’audit et les recherches.
+Validations principales :
+
+* le nom est obligatoire ;
+* la rareté est limitée à `commun`, `Rare`, `Epique`, `Legendaire` ;
+* le prix ne peut pas être négatif.
 
 ### Player
 
 Le modèle `Player` contient :
 
-- `pseudo` : chaîne obligatoire, unique, nettoyée avec `trim` ;
-- `solde` : nombre obligatoire avec minimum `0` ;
-- `inventory` : tableau de sous-documents.
+* `pseudo` : pseudo du joueur ;
+* `solde` : argent disponible ;
+* `inventory` : tableau des skins possédés.
+
+Validations principales :
+
+* le pseudo est obligatoire ;
+* le pseudo utilise `trim: true` ;
+* le pseudo est unique ;
+* le solde ne peut pas être négatif.
 
 ## Gestion des sous-documents
 
@@ -155,59 +156,128 @@ inventory: [
 ]
 ```
 
-Chaque item référence un skin via son `ObjectId` et stocke la date d’obtention.
+Chaque élément contient l’identifiant du skin acheté et la date d’obtention.
 
 ## Validators de schéma
 
-Validations implémentées :
+Les schémas Mongoose utilisent plusieurs validators :
 
-- le prix d’un skin ne peut pas être négatif ;
-- la rareté est limitée à `commun`, `Rare`, `Epique`, `Legendaire` ;
-- le pseudo du joueur utilise `trim: true` ;
-- le solde ne peut pas être négatif ;
-- le pseudo est unique.
+```js
+prix: {
+  type: Number,
+  min: 0
+}
+```
 
-Les erreurs Mongoose sont centralisées dans le middleware global `errorHandler` et renvoyées au format JSON avec un statut `400`.
+```js
+rarete: {
+  type: String,
+  enum: ['commun', 'Rare', 'Epique', 'Legendaire']
+}
+```
 
-## Queries Mongoose
+```js
+pseudo: {
+  type: String,
+  trim: true,
+  unique: true
+}
+```
 
-Exemples utilisés dans le projet :
+Les erreurs de validation sont gérées par un middleware global Express et renvoyées avec un statut `400`.
 
-- `Skin.find().sort(...)` pour lister le catalogue ;
-- `Player.find().populate(...)` pour afficher les inventaires ;
-- `Player.findById(...)` et `Skin.findById(...)` dans la route d’achat ;
-- `Player.aggregate(...)` pour le classement de fortune.
+## Queries sur Mongoose
+
+Exemples de requêtes utilisées :
+
+```js
+Skin.find().sort({ prix: 1, nom: 1 });
+```
+
+Récupère les skins du catalogue.
+
+```js
+Player.find().populate('inventory.skin');
+```
+
+Récupère les joueurs avec les informations des skins possédés.
+
+```js
+Player.findById(req.params.id);
+Skin.findById(skinId);
+```
+
+Utilisé dans la route d’achat pour récupérer le joueur et le skin.
+
+```js
+player.save();
+```
+
+Sauvegarde le joueur après modification du solde et de l’inventaire.
 
 ## Aggregate
 
-La route `/api/analytics/wealth` utilise un pipeline d’agrégation :
+La route suivante utilise un pipeline d’agrégation :
 
-1. `$unwind` sur `inventory` pour aplatir les skins possédés ;
-2. `$lookup` avec la collection `skins` pour récupérer la valeur de chaque skin ;
-3. second `$unwind` sur le résultat de la jointure ;
-4. `$group` par joueur pour calculer la valeur totale de l’inventaire ;
-5. `$addFields` pour calculer la fortune totale ;
-6. `$sort` pour obtenir le classement.
+```http
+GET /api/analytics/wealth
+```
 
-## Choix de transmission Atlas
+Le pipeline :
 
-Choix recommandé : Option C.
+1. utilise `$unwind` pour aplatir l’inventaire ;
+2. utilise `$lookup` pour faire la jointure avec la collection `skins` ;
+3. utilise `$group` pour regrouper par joueur ;
+4. calcule la valeur totale de l’inventaire ;
+5. ajoute `fortuneTotale` ;
+6. trie les joueurs du plus riche au moins riche.
 
-- Le projet utilise `.env` localement.
-- Le fichier `.env` n’est pas versionné.
-- La chaîne MongoDB Atlas doit être envoyée au correcteur par message privé Teams lors du rendu.
+Pipeline simplifié :
 
-Créer idéalement un utilisateur MongoDB Atlas dédié à ce projet avec accès `readWrite` uniquement sur la base `game_skins_catalog`.
+```js
+Player.aggregate([
+  { $unwind: '$inventory' },
+  {
+    $lookup: {
+      from: 'skins',
+      localField: 'inventory.skin',
+      foreignField: '_id',
+      as: 'skinInfo'
+    }
+  },
+  { $unwind: '$skinInfo' },
+  {
+    $group: {
+      _id: '$_id',
+      pseudo: { $first: '$pseudo' },
+      solde: { $first: '$solde' },
+      valeurInventaire: { $sum: '$skinInfo.prix' }
+    }
+  },
+  {
+    $addFields: {
+      fortuneTotale: { $add: ['$solde', '$valeurInventaire'] }
+    }
+  },
+  { $sort: { fortuneTotale: -1 } }
+]);
+```
+
+## Sécurité Atlas
+
+Le projet utilise un fichier `.env` pour stocker la chaîne de connexion MongoDB Atlas.
+
+Le fichier `.env` est ignoré par Git et ne doit pas être publié sur GitHub.
+
+La chaîne de connexion Atlas est transmise au correcteur séparément lors du rendu.
 
 ## Checklist avant rendu
 
-- [ ] Le projet démarre avec `npm run dev`.
-- [ ] Le fichier `.env` existe localement.
-- [ ] Le fichier `.env` n’est pas sur GitHub.
-- [ ] `npm run seed` ajoute les skins de démonstration.
-- [ ] `GET /api/skins` fonctionne.
-- [ ] `POST /api/players` fonctionne.
-- [ ] Le bouton acheter fonctionne sur le front.
-- [ ] Le classement `/api/analytics/wealth` s’affiche sur le front.
-- [ ] Le lien GitHub est fourni.
-- [ ] La chaîne MongoDB Atlas est envoyée au correcteur via Teams.
+* [ ] Le projet démarre avec `npm run dev`.
+* [ ] Le catalogue des skins s’affiche.
+* [ ] La création de joueur fonctionne.
+* [ ] L’achat d’un skin fonctionne.
+* [ ] L’inventaire est mis à jour.
+* [ ] `/api/analytics/wealth` fonctionne.
+* [ ] `.env` n’est pas sur GitHub.
+* [ ] L’accès MongoDB Atlas est transmis au correcteur.
