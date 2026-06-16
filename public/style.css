@@ -538,3 +538,13 @@ tbody tr:hover {
   margin: 0;
   color: var(--muted);
 }
+/* Correction du menu déroulant joueur */
+.player-select {
+  color: #ffffff;
+  background-color: #1a2144;
+}
+
+.player-select option {
+  color: #111827;
+  background-color: #ffffff;
+}
