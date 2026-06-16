@@ -1,0 +1,26 @@
+{
+  "name": "game-skins-catalog",
+  "version": "1.0.0",
+  "description": "Mini-application Express/Mongoose pour gérer un catalogue de skins et les inventaires des joueurs.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": ["express", "mongoose", "mongodb", "skins", "catalogue"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

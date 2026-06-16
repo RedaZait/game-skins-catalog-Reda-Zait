@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkinMarket - Catalogue de skins</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="page-bg"></div>
+
+  <header class="hero">
+    <div class="hero-content">
+      <div>
+        <p class="eyebrow">Mini-application Express / Mongoose</p>
+        <h1>SkinMarket</h1>
+        <p class="hero-text">
+          Catalogue de skins, gestion des joueurs, achats en boutique et classement des fortunes.
+        </p>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-label">Skins disponibles</span>
+          <strong id="stat-skins">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Joueurs</span>
+          <strong id="stat-players">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Fortune max</span>
+          <strong id="stat-richest">0 crédits</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel panel-form">
+      <div class="panel-heading">
+        <h2>Créer un joueur</h2>
+        <p>Ajoute un nouveau joueur avec son solde initial.</p>
+      </div>
+
+      <form id="player-form" class="player-form">
+        <div class="field">
+          <label for="pseudo">Pseudo</label>
+          <input id="pseudo" type="text" placeholder="Ex : ShinDev" required />
+        </div>
+
+        <div class="field">
+          <label for="solde">Solde initial</label>
+          <input id="solde" type="number" min="0" placeholder="Ex : 2000" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Créer le joueur</button>
+      </form>
+
+      <p id="message" class="message"></p>
+    </section>
+
+    <section class="panel panel-player">
+      <div class="panel-heading">
+        <h2>Joueur sélectionné</h2>
+        <p>Choisis un joueur avant d’acheter un skin.</p>
+      </div>
+
+      <select id="player-select" class="player-select">
+        <option value="">Aucun joueur</option>
+      </select>
+
+      <div id="selected-player-card" class="selected-player-card empty">
+        <p>Aucun joueur sélectionné.</p>
+      </div>
+    </section>
+
+    <section class="panel panel-shop">
+      <div class="panel-heading shop-heading">
+        <div>
+          <h2>Shop des skins</h2>
+          <p>Achète des skins selon le solde du joueur sélectionné.</p>
+        </div>
+        <button id="refresh-shop" class="btn btn-secondary">Actualiser</button>
+      </div>
+
+      <div id="skins-list" class="skins-grid"></div>
+    </section>
+
+    <section class="panel panel-ranking">
+      <div class="panel-heading ranking-heading">
+        <div>
+          <h2>Classement des joueurs les plus riches</h2>
+          <p>Fortune totale = solde actuel + valeur estimée de l’inventaire.</p>
+        </div>
+        <button id="refresh-wealth" class="btn btn-secondary">Rafraîchir</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pseudo</th>
+              <th>Solde</th>
+              <th>Inventaire</th>
+              <th>Nb skins</th>
+              <th>Fortune totale</th>
+            </tr>
+          </thead>
+          <tbody id="wealth-table"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
